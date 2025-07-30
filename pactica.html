@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Formulario con almacenamiento local</title>
+  <style>
+    table, th, td { border: 1px solid #000; border-collapse: collapse; padding: 6px; }
+  </style>
+</head>
+<body>
+  <h1>REGISTRO DE INFORMACIÓN</h1>
+
+  <form id="formulario">
+    <fieldset>
+      <legend>Datos básicos</legend>
+      <table>
+        <tr><td>Nombre:</td><td><input type="text" name="nombre" required></td></tr>
+        <tr><td>Correo electrónico:</td><td><input type="email" name="email" required></td></tr>
+        <tr><td>Fecha:</td><td><input type="date" name="fecha"></td></tr>
+        <tr><td>Fecha y hora:</td><td><input type="datetime-local" name="fechayhora"></td></tr>
+        <tr><td>Mes:</td><td><input type="month" name="mes"></td></tr>
+        <tr><td>Semana:</td><td><input type="week" name="semana"></td></tr>
+        <tr><td>Número:</td><td><input type="number" name="numero" min="-10" max="10"></td></tr>
+        <tr><td>Teléfono:</td><td><input type="tel" name="telefono" maxlength="10"></td></tr>
+        <tr><td>Término de búsqueda:</td><td><input type="search" name="termino"></td></tr>
+        <tr><td colspan="2"><button type="submit">✅ Enviar datos</button></td></tr>
+      </table>
+    </fieldset>
+  </form>
+
+  <h2>📋 Registros guardados:</h2>
+  <table id="tablaRegistros">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Fecha</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let registros = JSON.parse(localStorage.getItem("registros") || "[]");
+
+    function renderizar() {
+      const tbody = document.querySelector("#tablaRegistros tbody");
+      tbody.innerHTML = "";
+      registros.forEach((registro, index) => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+          <td>${registro.nombre}</td>
+          <td>${registro.email}</td>
+          <td>${registro.fecha}</td>
+          <td>
+            <button onclick="editar(${index})">✏️ Editar</button>
+            <button onclick="eliminar(${index})">🗑️ Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(fila);
+      });
+    }
+
+    function guardarEnLocal() {
+      localStorage.setItem("registros", JSON.stringify(registros));
+    }
+
+    document.getElementById("formulario").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const datos = new FormData(this);
+      const nuevo = {};
+      for (let [key, value] of datos.entries()) {
+        nuevo[key] = value;
+      }
+      registros.push(nuevo);
+      guardarEnLocal();
+      renderizar();
+      this.reset();
+    });
+
+    function eliminar(index) {
+      if (confirm("¿Eliminar este registro?")) {
+        registros.splice(index, 1);
+        guardarEnLocal();
+        renderizar();
+      }
+    }
+
+    function editar(index) {
+      const datos = registros[index];
+      const form = document.getElementById("formulario");
+      for (let key in datos) {
+        if (form[key]) {
+          form[key].value = datos[key];
+        }
+      }
+      registros.splice(index, 1); // Eliminamos el original para reemplazarlo al enviar
+      guardarEnLocal();
+      renderizar();
+    }
+
+    // Inicializar
+    renderizar();
+  </script>
+</body>
+</html>
